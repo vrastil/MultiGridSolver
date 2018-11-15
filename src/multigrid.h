@@ -1,7 +1,7 @@
 #ifndef _MULTIGRID_HEADER
 #define _MULTIGRID_HEADER
 #include <assert.h>
-#include <iostream>
+#include <iosfwd>
 #include <vector>
 #include <climits>
 #include <complex>
@@ -17,59 +17,62 @@
     //                                       //
     //=========================================
 
-template<unsigned int NDIM, typename T>
+template<size_t NDIM, typename T>
 class MultiGrid {
   private:
 
-    unsigned int _N;                        // Number of cells per dim in domain-grid [0]
-    unsigned int _Ntot;                     // Total number of cells in domain-grid [0]
-    unsigned int _Nlevel;                   // Number of levels
-    std::vector<unsigned int> _NinLevel;    // Number of cells per dim in each level
-    std::vector<unsigned int> _NtotinLevel; // Total number of cells in each level
+    size_t _N;                        // Number of cells per dim in domain-grid [0]
+    size_t _Ntot;                     // Total number of cells in domain-grid [0]
+    size_t _Nlevel;                   // Number of levels
+    std::vector<size_t> _NinLevel;    // Number of cells per dim in each level
+    std::vector<size_t> _NtotinLevel; // Total number of cells in each level
     std::vector<Grid<NDIM,T> > _y;          // The grid data
 
   public:
 
     // Constructors
     MultiGrid() {}
-    MultiGrid(unsigned int N):  MultiGrid(N, int(log2(N)+1)) {}
-    MultiGrid(unsigned int N, unsigned int Nlevel);
-    MultiGrid(Grid<NDIM, T> &y, unsigned int Nlevel);
+    MultiGrid(size_t N):  MultiGrid(N, int(log2(N)+1)) {}
+    MultiGrid(size_t N, size_t Nlevel);
+    MultiGrid(Grid<NDIM, T> &y, size_t Nlevel);
     MultiGrid(Grid<NDIM, T> &y);
     
     // Fetch a reference to the solution grid at a given level
-    Grid<NDIM,T>& get_grid(unsigned int level = 0);
+    Grid<NDIM,T>& get_grid(size_t level = 0);
+    const Grid<NDIM,T>& get_grid(size_t level = 0) const;
 
     // Fetch a pointer to the underlying array at each level
-    T* operator[](unsigned int level);
-    T* get_y(unsigned int level);
+    T* operator[](size_t level);
+    const T* operator[](size_t level) const;
+    T* get_y(size_t level = 0);
+    T const* const get_y(size_t level = 0) const;
 
     // Fetch the value in the grid at a given level and index
-    T get_y(unsigned int level, unsigned int i);
+    T get_y(size_t level, size_t i);
     
     // Fetch the value in the grid at a given level and coordinates (ix,iy...)
-    T get_y(unsigned int level, std::vector<unsigned int>& coord_list);
+    T get_y(size_t level, std::vector<size_t>& coord_list);
 
     // Fetch info about the grid
-    unsigned int get_N(unsigned int level = 0);
-    unsigned int get_Ntot(unsigned int level = 0);
-    unsigned int get_Ndim();
-    unsigned int get_Nlevel();
-    unsigned int get_Nmin();
+    size_t get_N(size_t level = 0) const;
+    size_t get_Ntot(size_t level = 0) const;
+    size_t get_Ndim() const;
+    size_t get_Nlevel() const;
+    size_t get_Nmin() const;
   
     // Set the value of y at given level and index (save way to define value)
-    void set_y(unsigned int level, unsigned int i, T value);
+    void set_y(size_t level, size_t i, T value);
     
     // Gridindex from coordinate and vice versa
-    unsigned int gridindex_from_coord(unsigned int level, std::vector<unsigned int>& coord_list);
-    std::vector<unsigned int> coord_from_gridindex(unsigned int level, unsigned int i);
+    size_t gridindex_from_coord(size_t level, std::vector<size_t>& coord_list);
+    std::vector<size_t> coord_from_gridindex(size_t level, size_t i);
 
     // Free up all memory and reset all variables
     void clear();
 
     // Restrict down a grid 
-    void restrict_down(unsigned int from_level); 
-    void restrict_down(unsigned int from_level, Grid<NDIM, T> &to_grid); 
+    void restrict_down(size_t from_level); 
+    void restrict_down(size_t from_level, Grid<NDIM, T> &to_grid); 
     void restrict_down_all();
 };
 

@@ -1,9 +1,10 @@
 #include "grid.h"
+#include <iostream>
 
 // Simple int-int a^b power-function
-inline unsigned int power(unsigned int a, unsigned int b){
-  unsigned int res = 1;
-  for(unsigned int i = 0; i < b; i++) {
+inline size_t power(size_t a, size_t b){
+  size_t res = 1;
+  for(size_t i = 0; i < b; i++) {
     res *= a;
   }
 #ifdef _BOUNDSCHECK
@@ -12,10 +13,10 @@ inline unsigned int power(unsigned int a, unsigned int b){
   return res;
 }
     
-template<unsigned int NDIM, typename T>
+template<size_t NDIM, typename T>
 void Grid<NDIM,T>::check_for_nan(bool exitifnan){
   bool nanfound = false;
-  for(unsigned int i = 0; i < _Ntot; i++){
+  for(size_t i = 0; i < _Ntot; i++){
     if(_y[i] != _y[i]){
       nanfound = true;
       break;
@@ -29,18 +30,37 @@ void Grid<NDIM,T>::check_for_nan(bool exitifnan){
 }
 
 // Constructor with intial value
-template<unsigned int NDIM, typename T>
-Grid<NDIM,T>::Grid(unsigned int N, T yini) : _N(N), _Ntot(power(_N, NDIM)), _y(std::vector<T>(_Ntot, yini)) {}
+template<size_t NDIM, typename T>
+Grid<NDIM,T>::Grid(size_t N, T yini) : _N(N), _Ntot(power(_N, NDIM)), _y(std::vector<T>(_Ntot, yini)) {}
 
 // Fetch pointer to grid
-template<unsigned int NDIM, typename T>
+template<size_t NDIM, typename T>
 T* Grid<NDIM,T>::get_y() { 
   return &_y[0]; 
 }
 
+template<size_t NDIM, typename T>
+T const* const Grid<NDIM,T>::get_y() const { 
+  return &_y[0]; 
+}
+
+template<size_t NDIM, typename T>
+const std::vector<T>& Grid<NDIM,T>::get_vec() const
+{
+    return _y;
+}
+
 // Allow to fetch value using f[i] syntax
-template<unsigned int NDIM, typename T>
-T& Grid<NDIM,T>::operator[](unsigned int i){ 
+template<size_t NDIM, typename T>
+T& Grid<NDIM,T>::operator[](size_t i){ 
+#ifdef _BOUNDSCHECK
+  assert(i < _Ntot);
+#endif
+  return _y[i]; 
+}
+
+template<size_t NDIM, typename T>
+const T& Grid<NDIM,T>::operator[](size_t i) const { 
 #ifdef _BOUNDSCHECK
   assert(i < _Ntot);
 #endif
@@ -48,8 +68,8 @@ T& Grid<NDIM,T>::operator[](unsigned int i){
 }
 
 // Fetch value of grid-cell [i]
-template<unsigned int NDIM, typename T>
-T Grid<NDIM,T>::get_y(unsigned int i) { 
+template<size_t NDIM, typename T>
+T Grid<NDIM,T>::get_y(size_t i) { 
 #ifdef _BOUNDSCHECK
   assert(i < _Ntot);
 #endif
@@ -57,7 +77,7 @@ T Grid<NDIM,T>::get_y(unsigned int i) {
 }
 
 // Assign whole grid from vector
-template<unsigned int NDIM, typename T>
+template<size_t NDIM, typename T>
 void Grid<NDIM,T>::set_y(std::vector<T> &y){
 #ifdef _BOUNDSCHECK
   assert(y.size() == _Ntot);
@@ -66,8 +86,8 @@ void Grid<NDIM,T>::set_y(std::vector<T> &y){
 }
 
 // Assign the gridcell [i] with [value]
-template<unsigned int NDIM, typename T>
-void Grid<NDIM,T>::set_y(unsigned int i, T &value){
+template<size_t NDIM, typename T>
+void Grid<NDIM,T>::set_y(size_t i, T &value){
 #ifdef _BOUNDSCHECK
   assert(i < _Ntot);
 #endif
@@ -75,20 +95,20 @@ void Grid<NDIM,T>::set_y(unsigned int i, T &value){
 }
 
 // Compute coordinates given a gridindex
-template<unsigned int NDIM, typename T>
-std::vector<unsigned int> Grid<NDIM,T>::index_list(unsigned int i){
-  std::vector<unsigned int> ii(NDIM, 0);
-  for(unsigned int j = 0, n = 1; j < NDIM; j++, n *= _N){
+template<size_t NDIM, typename T>
+std::vector<size_t> Grid<NDIM,T>::index_list(size_t i){
+  std::vector<size_t> ii(NDIM, 0);
+  for(size_t j = 0, n = 1; j < NDIM; j++, n *= _N){
     ii[j] = i / n % _N;
   }
   return ii;
 }
 
 // Coordinates -> grid-index (index in the 1D _y vector)
-template<unsigned int NDIM, typename T>
-unsigned int Grid<NDIM,T>::grid_index(std::vector<unsigned int> &index_list){
-  unsigned int index = 0;
-  for(unsigned int j = 0, n = 1; j < NDIM; j++, n *= _N)
+template<size_t NDIM, typename T>
+size_t Grid<NDIM,T>::grid_index(std::vector<size_t> &index_list){
+  size_t index = 0;
+  for(size_t j = 0, n = 1; j < NDIM; j++, n *= _N)
     index += index_list[j] * n;
 #ifdef _BOUNDSCHECK
   assert(index < _Ntot);
@@ -97,32 +117,32 @@ unsigned int Grid<NDIM,T>::grid_index(std::vector<unsigned int> &index_list){
 }
     
 // Coordinate -> gridindex for 3D grid
-template<unsigned int NDIM, typename T>
-unsigned int Grid<NDIM,T>::grid_index_3d(unsigned int ix, unsigned int iy, unsigned int iz){
+template<size_t NDIM, typename T>
+size_t Grid<NDIM,T>::grid_index_3d(size_t ix, size_t iy, size_t iz){
   return ix + _N*(iy + _N*iz);
 }
 
 // Coordinate -> gridindex for 2D grid
-template<unsigned int NDIM, typename T>
-unsigned int Grid<NDIM,T>::grid_index_2d(unsigned int ix, unsigned int iy){
+template<size_t NDIM, typename T>
+size_t Grid<NDIM,T>::grid_index_2d(size_t ix, size_t iy){
   return ix + _N*iy;
 }
 // Returns number of cells per dim
-template<unsigned int NDIM, typename T>
-unsigned int Grid<NDIM,T>::get_N(){
+template<size_t NDIM, typename T>
+size_t Grid<NDIM,T>::get_N() const{
   return _N;
 }
 
 // Return total number of cells
-template<unsigned int NDIM, typename T>
-unsigned int Grid<NDIM,T>::get_Ntot(){
+template<size_t NDIM, typename T>
+size_t Grid<NDIM,T>::get_Ntot() const{
   return _Ntot;
 }
 
 // Write a grid to file
-template<unsigned int NDIM, typename T>
+template<size_t NDIM, typename T>
 void Grid<NDIM,T>::dump_to_file(std::string filename){
-  unsigned int ndim = NDIM;
+  size_t ndim = NDIM;
   
   // Verbose
   std::cout << "==> Dumping grid to file [" << filename << "]" << std::endl;
@@ -130,23 +150,23 @@ void Grid<NDIM,T>::dump_to_file(std::string filename){
 
   // Write header
   std::ofstream fout(filename.c_str(), std::ios::out | std::ios::binary);
-  fout.write((char*)&_N, sizeof(unsigned int));
-  fout.write((char*)&ndim, sizeof(unsigned int));
+  fout.write((char*)&_N, sizeof(size_t));
+  fout.write((char*)&ndim, sizeof(size_t));
 
   // Write the grid-data
   fout.write((char*)&_y[0], _y.size() * sizeof(T));
 }
 
 // Read a grid from file (assumes specific format)
-template<unsigned int NDIM, typename T>
+template<size_t NDIM, typename T>
 void Grid<NDIM,T>::read_from_file(std::string filename){
-  unsigned int ninfile = 0, ntot = 0, ndim = 0, size = 0;
+  size_t ninfile = 0, ntot = 0, ndim = 0, size = 0;
   
   // Read header: N and NDIM
   std::ifstream input(filename.c_str(), std::ios::in | std::ifstream::binary);
   
-  input.read((char *) &ninfile, sizeof(unsigned int));
-  input.read((char *) &ndim, sizeof(unsigned int));
+  input.read((char *) &ninfile, sizeof(size_t));
+  input.read((char *) &ndim, sizeof(size_t));
 
   ntot = power(ninfile, NDIM);
   size = sizeof(T) * ntot;
@@ -170,13 +190,15 @@ void Grid<NDIM,T>::read_from_file(std::string filename){
   std::memcpy(&_y[0], &tempvec[0], size);
 }
 
-template<unsigned int NDIM, typename T>
+template<size_t NDIM, typename T>
 void Grid<NDIM,T>::clear(){
   _N = _Ntot = 0;
   _y.clear();
 }
 
 // Explicit template specialisation
+template class Grid<3,long double>;
+
 template class Grid<3,double>;
 template class Grid<2,double>;
 template class Grid<1,double>;

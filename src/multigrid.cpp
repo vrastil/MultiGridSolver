@@ -1,9 +1,10 @@
 #include "multigrid.h"
+#include <iostream>
 
 // Simple int-int a^b power-function
-inline unsigned int power(unsigned int a, unsigned int b){
-  unsigned int res = 1;
-  for(unsigned int i = 0; i < b; i++) {
+inline size_t power(size_t a, size_t b){
+  size_t res = 1;
+  for(size_t i = 0; i < b; i++) {
     res *= a;
   }
 #ifdef _BOUNDSCHECK
@@ -12,99 +13,123 @@ inline unsigned int power(unsigned int a, unsigned int b){
   return res;
 }
 
-template<unsigned int NDIM, typename T>
-Grid<NDIM,T>& MultiGrid<NDIM,T>::get_grid(unsigned int level){
+template<size_t NDIM, typename T>
+Grid<NDIM,T>& MultiGrid<NDIM,T>::get_grid(size_t level){
 #ifdef _BOUNDSCHECK
   assert(level < _Nlevel);
 #endif
   return _y[level];
 }
 
-template<unsigned int NDIM, typename T>
-T* MultiGrid<NDIM,T>::operator[](unsigned int level){ 
+template<size_t NDIM, typename T>
+const Grid<NDIM,T>& MultiGrid<NDIM,T>::get_grid(size_t level) const{
+#ifdef _BOUNDSCHECK
+  assert(level < _Nlevel);
+#endif
+  return _y[level];
+}
+
+template<size_t NDIM, typename T>
+T* MultiGrid<NDIM,T>::operator[](size_t level){ 
 #ifdef _BOUNDSCHECK
   assert(level < _Nlevel);
 #endif
   return _y[level].get_y(); 
 }
 
-template<unsigned int NDIM, typename T>
-T* MultiGrid<NDIM,T>::get_y(unsigned int level){ 
+template<size_t NDIM, typename T>
+const T* MultiGrid<NDIM,T>::operator[](size_t level) const{ 
 #ifdef _BOUNDSCHECK
   assert(level < _Nlevel);
 #endif
   return _y[level].get_y(); 
 }
 
-template<unsigned int NDIM, typename T>
-T MultiGrid<NDIM,T>::get_y(unsigned int level, unsigned int i){
+template<size_t NDIM, typename T>
+T* MultiGrid<NDIM,T>::get_y(size_t level){ 
+#ifdef _BOUNDSCHECK
+  assert(level < _Nlevel);
+#endif
+  return _y[level].get_y(); 
+}
+
+template<size_t NDIM, typename T>
+T const * const MultiGrid<NDIM,T>::get_y(size_t level) const{ 
+#ifdef _BOUNDSCHECK
+  assert(level < _Nlevel);
+#endif
+  return _y[level].get_y(); 
+}
+
+template<size_t NDIM, typename T>
+T MultiGrid<NDIM,T>::get_y(size_t level, size_t i){
 #ifdef _BOUNDSCHECK
   assert(level < _Nlevel);
 #endif
   return _y[level].get_y(i);
 }
 
-template<unsigned int NDIM, typename T>
-T MultiGrid<NDIM,T>::get_y(unsigned int level, std::vector<unsigned int>& coord_list){
-  unsigned int ind = gridindex_from_coord(level, coord_list);
+template<size_t NDIM, typename T>
+T MultiGrid<NDIM,T>::get_y(size_t level, std::vector<size_t>& coord_list){
+  size_t ind = gridindex_from_coord(level, coord_list);
 #ifdef _BOUNDSCHECK
   assert(level < _Nlevel);
 #endif
   return _y[level].get_y(ind);
 }
 
-template<unsigned int NDIM, typename T>
-void MultiGrid<NDIM,T>::set_y(unsigned int level, unsigned int i, T value){
+template<size_t NDIM, typename T>
+void MultiGrid<NDIM,T>::set_y(size_t level, size_t i, T value){
 #ifdef _BOUNDSCHECK
   assert(level < _Nlevel);
 #endif
   _y[level].set_y(i, value);
 }
 
-template<unsigned int NDIM, typename T>
-unsigned int MultiGrid<NDIM,T>::get_N(unsigned int level){
+template<size_t NDIM, typename T>
+size_t MultiGrid<NDIM,T>::get_N(size_t level) const{
 #ifdef _BOUNDSCHECK
   assert(level < _Nlevel);
 #endif
   return _NinLevel[level];
 }
 
-template<unsigned int NDIM, typename T>
-unsigned int MultiGrid<NDIM,T>::get_Ntot(unsigned int level){
+template<size_t NDIM, typename T>
+size_t MultiGrid<NDIM,T>::get_Ntot(size_t level) const{
 #ifdef _BOUNDSCHECK
   assert(level < _Nlevel);
 #endif
   return _NtotinLevel[level];
 }
 
-template<unsigned int NDIM, typename T>
-unsigned int MultiGrid<NDIM,T>::get_Ndim(){ 
+template<size_t NDIM, typename T>
+size_t MultiGrid<NDIM,T>::get_Ndim() const{ 
   return NDIM; 
 }
 
-template<unsigned int NDIM, typename T>
-unsigned int MultiGrid<NDIM,T>::get_Nlevel(){ 
+template<size_t NDIM, typename T>
+size_t MultiGrid<NDIM,T>::get_Nlevel() const{ 
   return _Nlevel; 
 }
 
-template<unsigned int NDIM, typename T>
-unsigned int MultiGrid<NDIM,T>::get_Nmin(){ 
+template<size_t NDIM, typename T>
+size_t MultiGrid<NDIM,T>::get_Nmin() const{ 
   return _NinLevel[_Nlevel-1]; 
 }
 
-template<unsigned int NDIM, typename T>
+template<size_t NDIM, typename T>
 MultiGrid<NDIM,T>::MultiGrid(Grid<NDIM, T> &y) : MultiGrid(y.get_N(), int(log2(y.get_N())+1)){
   assert( power(2, _Nlevel - 1 ) == y.get_N()  );
   _y[0] = y; 
 }
 
-template<unsigned int NDIM, typename T>
-MultiGrid<NDIM,T>::MultiGrid(Grid<NDIM, T> &y, unsigned int Nlevel) : MultiGrid(y.get_N(), Nlevel) {
+template<size_t NDIM, typename T>
+MultiGrid<NDIM,T>::MultiGrid(Grid<NDIM, T> &y, size_t Nlevel) : MultiGrid(y.get_N(), Nlevel) {
   _y[0] = y; 
 }
 
-template<unsigned int NDIM, typename T>
-MultiGrid<NDIM,T>::MultiGrid(unsigned int N, unsigned int Nlevel) : _N(N), _Ntot(power(_N, NDIM)), _Nlevel(Nlevel), _NinLevel(std::vector<unsigned int>(_Nlevel, _N)), _NtotinLevel(std::vector<unsigned int>(_Nlevel, _Ntot)) {
+template<size_t NDIM, typename T>
+MultiGrid<NDIM,T>::MultiGrid(size_t N, size_t Nlevel) : _N(N), _Ntot(power(_N, NDIM)), _Nlevel(Nlevel), _NinLevel(std::vector<size_t>(_Nlevel, _N)), _NtotinLevel(std::vector<size_t>(_Nlevel, _Ntot)) {
 
   // Check that N is positive and divisible by 2^{Nlevel - 1}
   assert( ( _N / power(2, _Nlevel - 1) ) * power(2, _Nlevel - 1) == _N && _N > 0); 
@@ -118,7 +143,7 @@ MultiGrid<NDIM,T>::MultiGrid(unsigned int N, unsigned int Nlevel) : _N(N), _Ntot
   // Allocate memory
   _y = std::vector<Grid<NDIM, T> >(_Nlevel);
   _y[0] = Grid<NDIM, T> (_N, 0.0);
-  for(unsigned int level = 1; level < _Nlevel; level++){
+  for(size_t level = 1; level < _Nlevel; level++){
     _NinLevel[level] = _NinLevel[level-1] / 2;
     _NtotinLevel[level] = power(_NinLevel[level], NDIM);
     assert(_NinLevel[level] > 0);
@@ -126,8 +151,8 @@ MultiGrid<NDIM,T>::MultiGrid(unsigned int N, unsigned int Nlevel) : _N(N), _Ntot
   }
 }
 
-template<unsigned int NDIM, typename T>
-void MultiGrid<NDIM,T>::restrict_down(unsigned int from_level, Grid<NDIM,T> &to_grid){
+template<size_t NDIM, typename T>
+void MultiGrid<NDIM,T>::restrict_down(size_t from_level, Grid<NDIM,T> &to_grid){
 
   // Cannot restict down if we are at the bottom
   if(from_level + 1 >= _Nlevel) return;
@@ -143,29 +168,29 @@ void MultiGrid<NDIM,T>::restrict_down(unsigned int from_level, Grid<NDIM,T> &to_
   T *Bottom = to_grid.get_y();//_y[from_level+1].get_y();
 
   // Nodes on top and bottom level
-  unsigned int NTop = _NinLevel[from_level];
-  unsigned int NtotTop = _NtotinLevel[from_level];
-  unsigned int NBottom = _NinLevel[from_level+1];
-  unsigned int NtotBottom = _NtotinLevel[from_level+1];
+  size_t NTop = _NinLevel[from_level];
+  size_t NtotTop = _NtotinLevel[from_level];
+  size_t NBottom = _NinLevel[from_level+1];
+  size_t NtotBottom = _NtotinLevel[from_level+1];
   
   // Clear bottom array
   std::fill_n(Bottom, NtotBottom, 0.0);
 
   // Compute N^j
-  std::vector<unsigned int> NpowTop(NDIM, 1);
-  std::vector<unsigned int> NpowBottom(NDIM, 1);
-  for(unsigned int j = 1; j < NDIM; j++){
+  std::vector<size_t> NpowTop(NDIM, 1);
+  std::vector<size_t> NpowBottom(NDIM, 1);
+  for(size_t j = 1; j < NDIM; j++){
     NpowTop[j] = NpowTop[j-1] * NTop;
     NpowBottom[j] = NpowBottom[j-1] * NBottom;
   }
 
   // Loop over top grid
-  for (unsigned int i = 0; i < NtotTop; i++) {
+  for (size_t i = 0; i < NtotTop; i++) {
 
     // Compute bottom array index the top cell 'belongs to'
-    unsigned int i_bottom = 0;
-    for(unsigned int j = 0; j < NDIM; j++){
-      unsigned int ii = i / NpowTop[j] % NTop; 
+    size_t i_bottom = 0;
+    for(size_t j = 0; j < NDIM; j++){
+      size_t ii = i / NpowTop[j] % NTop; 
       i_bottom += (ii/2) * NpowBottom[j];
     }
 
@@ -175,39 +200,39 @@ void MultiGrid<NDIM,T>::restrict_down(unsigned int from_level, Grid<NDIM,T> &to_
 
 }
 
-template<unsigned int NDIM, typename T>
-void MultiGrid<NDIM,T>::restrict_down(unsigned int from_level){
+template<size_t NDIM, typename T>
+void MultiGrid<NDIM,T>::restrict_down(size_t from_level){
   restrict_down(from_level, _y[from_level+1]);
 } 
 
-template<unsigned int NDIM, typename T>
+template<size_t NDIM, typename T>
 void MultiGrid<NDIM,T>::restrict_down_all(){
-  for(unsigned int i = 0; i < _Nlevel-1; i++)
+  for(size_t i = 0; i < _Nlevel-1; i++)
     restrict_down(i);
 }
 
-template<unsigned int NDIM, typename T>
-std::vector<unsigned int> MultiGrid<NDIM,T>::coord_from_gridindex(unsigned int level, unsigned int i){
+template<size_t NDIM, typename T>
+std::vector<size_t> MultiGrid<NDIM,T>::coord_from_gridindex(size_t level, size_t i){
 #ifdef _BOUNDSCHECK
   assert(i < _NtotinLevel[level]);
 #endif
-  std::vector<unsigned int> index(NDIM, 0);
-  unsigned int N = _NinLevel[level];
-  for(unsigned int idim = 0, n = 1; idim < NDIM; idim++, n *= N){
+  std::vector<size_t> index(NDIM, 0);
+  size_t N = _NinLevel[level];
+  for(size_t idim = 0, n = 1; idim < NDIM; idim++, n *= N){
     index[idim] = i / n % N;
   }
   return index;
 }
 
-template<unsigned int NDIM, typename T>
-unsigned int MultiGrid<NDIM,T>::gridindex_from_coord(unsigned int level, std::vector<unsigned int>& coord_list){
-  unsigned int index = 0;
-  for(unsigned int j = 0, N = 1; j < NDIM; j++, N *= _NinLevel[level])
+template<size_t NDIM, typename T>
+size_t MultiGrid<NDIM,T>::gridindex_from_coord(size_t level, std::vector<size_t>& coord_list){
+  size_t index = 0;
+  for(size_t j = 0, N = 1; j < NDIM; j++, N *= _NinLevel[level])
     index += coord_list[j] * N;
   return index;
 }
 
-template<unsigned int NDIM, typename T>
+template<size_t NDIM, typename T>
 void  MultiGrid<NDIM,T>::clear(){
   _N = _Ntot = _Nlevel = 0;
   _NinLevel.clear();
@@ -216,6 +241,8 @@ void  MultiGrid<NDIM,T>::clear(){
 }
 
 // Explicit template specialisation
+template class MultiGrid<3,long double>;
+
 template class MultiGrid<3,double>;
 template class MultiGrid<2,double>;
 template class MultiGrid<1,double>;
