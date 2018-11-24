@@ -40,7 +40,7 @@ T* Grid<NDIM,T>::get_y() {
 }
 
 template<size_t NDIM, typename T>
-T const* const Grid<NDIM,T>::get_y() const { 
+T const * Grid<NDIM,T>::get_y() const { 
   return &_y[0]; 
 }
 

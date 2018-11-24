@@ -144,7 +144,7 @@ T* MultiGridSolver<NDIM,T>::get_y(size_t level){
 }
 
 template<size_t NDIM, typename T>
-T const* const MultiGridSolver<NDIM,T>::get_y(size_t level) const{
+T const * MultiGridSolver<NDIM,T>::get_y(size_t level) const{
     return _f.get_y(level);
 } 
 

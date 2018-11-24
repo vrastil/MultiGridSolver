@@ -117,7 +117,7 @@ public:
 
     // Get a pointer to the solution array / grid
     T *get_y(size_t level = 0);
-    T const* const get_y(size_t level = 0) const;
+    T const * get_y(size_t level = 0) const;
 
     Grid<NDIM, T> &get_grid(size_t level = 0){ return _f.get_grid(level); };
     const Grid<NDIM, T> &get_grid(size_t level = 0) const { return _f.get_grid(level); };
@@ -127,7 +127,7 @@ public:
 
     // Fetch values in externally added fields
     T* get_external_field(size_t level, size_t field) { return _ext_field[field]->get_y(level); };
-    T const* const get_external_field(size_t level, size_t field) const { return _ext_field[field]->get_y(level); };
+    T const * get_external_field(size_t level, size_t field) const { return _ext_field[field]->get_y(level); };
 
     Grid<NDIM, T> &get_external_grid(size_t level, size_t field) { return _ext_field[field]->get_grid(level); };
     const Grid<NDIM, T> &get_external_grid(size_t level, size_t field) const { return _ext_field[field]->get_grid(level); };
