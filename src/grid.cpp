@@ -1,6 +1,9 @@
 #include "grid.h"
 #include <iostream>
 
+#define BOOST_LOG_DYN_LINK 1
+#include <boost/log/trivial.hpp>
+
 // Simple int-int a^b power-function
 inline size_t power(size_t a, size_t b){
   size_t res = 1;
@@ -24,7 +27,7 @@ void Grid<NDIM,T>::check_for_nan(bool exitifnan){
   }
 
   if(nanfound){
-    std::cout << "Warning: NaN found in grid" << (exitifnan ? " ...aborting!" : "" ) << std::endl;
+    BOOST_LOG_TRIVIAL(error) << "Warning: NaN found in grid" << (exitifnan ? " ...aborting!" : "" ) << std::endl;
     if(exitifnan) exit(1);
   }
 }
@@ -145,8 +148,8 @@ void Grid<NDIM,T>::dump_to_file(std::string filename){
   size_t ndim = NDIM;
   
   // Verbose
-  std::cout << "==> Dumping grid to file [" << filename << "]" << std::endl;
-  std::cout << "    Ndim: " << NDIM << " N: " << _N << " Ntot: " << _Ntot << std::endl;
+  BOOST_LOG_TRIVIAL(debug) << "==> Dumping grid to file [" << filename << "]" << std::endl;
+  BOOST_LOG_TRIVIAL(debug) << "    Ndim: " << NDIM << " N: " << _N << " Ntot: " << _Ntot << std::endl;
 
   // Write header
   std::ofstream fout(filename.c_str(), std::ios::out | std::ios::binary);
@@ -176,8 +179,8 @@ void Grid<NDIM,T>::read_from_file(std::string filename){
   assert(ninfile > 0 && ntot < INT_MAX);
 
   // Verbose
-  std::cout << "==> Reading file into grid [" << filename << "]" << std::endl;
-  std::cout << "    Ndim: " << ndim << " Nfile: " << ninfile << " Ntot: " << ntot << std::endl;
+  BOOST_LOG_TRIVIAL(debug) << "==> Reading file into grid [" << filename << "]" << std::endl;
+  BOOST_LOG_TRIVIAL(debug) << "    Ndim: " << ndim << " Nfile: " << ninfile << " Ntot: " << ntot << std::endl;
 
   // Read the data
   std::vector<char> tempvec(size, 0);

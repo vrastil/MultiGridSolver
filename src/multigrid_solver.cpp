@@ -1,6 +1,9 @@
 #include "multigrid_solver.h"
 #include <iostream>
 
+#define BOOST_LOG_DYN_LINK 1
+#include <boost/log/trivial.hpp>
+
 // Simple int-int a^b power-function
 inline size_t power(size_t a, size_t b){
   size_t res = 1;
@@ -57,7 +60,7 @@ T MultiGridSolver<NDIM,T>::dl_operator(const size_t level, const std::vector<siz
 
   // Sanity check
   if(fabs(dl) < 1e-10){
-    std::cout << "Error: dl close to 0" << std::endl;
+    BOOST_LOG_TRIVIAL(error) << "Error: dl close to 0" << std::endl;
     exit(1);
   }
 
@@ -90,10 +93,10 @@ typename MultiGridSolver<NDIM,T>::Exit_Status MultiGridSolver<NDIM,T>::solve(){
   _res_domain_array.clear();
 
   if(_verbose){
-    std::cout << std::endl;
-    std::cout << "===============================================================" << std::endl;
-    std::cout << "==> Starting multigrid solver" << std::endl;
-    std::cout << "===============================================================\n" << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << "===============================================================" << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << "==> Starting multigrid solver" << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << "===============================================================\n" << std::endl;
   }
 
   // Pre-solve on domaingrid
@@ -111,10 +114,10 @@ typename MultiGridSolver<NDIM,T>::Exit_Status MultiGridSolver<NDIM,T>::solve(){
     ++_istep_vcycle;
     
     if(_verbose){
-      std::cout << std::endl;
-      std::cout << "===============================================================" << std::endl;
-      std::cout << "==> Starting V-cycle istep = " << _istep_vcycle << " Res = " << _rms_res << std::endl;
-      std::cout << "===============================================================\n" << std::endl;
+      BOOST_LOG_TRIVIAL(debug) << std::endl;
+      BOOST_LOG_TRIVIAL(debug) << "===============================================================" << std::endl;
+      BOOST_LOG_TRIVIAL(debug) << "==> Starting V-cycle istep = " << _istep_vcycle << " Res = " << _rms_res << std::endl;
+      BOOST_LOG_TRIVIAL(debug) << "===============================================================\n" << std::endl;
     }
 
     if (_Nlevel == 1)
@@ -312,9 +315,9 @@ typename MultiGridSolver<NDIM,T>::Exit_Status MultiGridSolver<NDIM,T>::check_con
 
   // Print out some information
   if(_verbose){
-    std::cout << "    Checking for convergence at step = " << _istep_vcycle << std::endl;
-    std::cout << "        Residual = " << _rms_res << "  Residual_old = " <<  _rms_res_old << std::endl;
-    std::cout << "        Residual_i = " << _rms_res_i << "  Err = " << err << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << "    Checking for convergence at step = " << _istep_vcycle << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << "        Residual = " << _rms_res << "  Residual_old = " <<  _rms_res_old << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << "        Residual_i = " << _rms_res_i << "  Err = " << err << std::endl;
   }
 
   // Convergence criterion
@@ -323,13 +326,13 @@ typename MultiGridSolver<NDIM,T>::Exit_Status MultiGridSolver<NDIM,T>::check_con
     // Convergence criterion based on the residual
     if(_rms_res < _eps_converge){
       if(_verbose || true){
-        std::cout << std::endl;
-        std::cout << "    The solution has converged res = " << _rms_res << " < " << _eps_converge << " istep = " << _istep_vcycle << "\n" << std::endl;
+        BOOST_LOG_TRIVIAL(debug) << std::endl;
+        BOOST_LOG_TRIVIAL(debug) << "    The solution has converged res = " << _rms_res << " < " << _eps_converge << " istep = " << _istep_vcycle << "\n" << std::endl;
       }
       converged = Exit_Status::SUCCESS;
     } else {
       if(_verbose){
-        std::cout << "    The solution has not yet converged res = " << _rms_res << " !< " << _eps_converge << std::endl; 
+        BOOST_LOG_TRIVIAL(debug) << "    The solution has not yet converged res = " << _rms_res << " !< " << _eps_converge << std::endl; 
       }
     }
 
@@ -338,25 +341,25 @@ typename MultiGridSolver<NDIM,T>::Exit_Status MultiGridSolver<NDIM,T>::check_con
     // Convergence criterion based on the ratio of the residual
     if(err < _eps_converge){
       if(_verbose || true){
-        std::cout << std::endl;
-        std::cout << "    The solution has converged err = " << err << " < " << _eps_converge << " ( res = " << _rms_res << " ) istep = " << _istep_vcycle << "\n" << std::endl;
+        BOOST_LOG_TRIVIAL(debug) << std::endl;
+        BOOST_LOG_TRIVIAL(debug) << "    The solution has converged err = " << err << " < " << _eps_converge << " ( res = " << _rms_res << " ) istep = " << _istep_vcycle << "\n" << std::endl;
       }
       converged = Exit_Status::SUCCESS;
     } else {
       if(_verbose){
-       std::cout << "    The solution has not yet converged err = " << err << " !< " << _eps_converge << std::endl;
+       BOOST_LOG_TRIVIAL(debug) << "    The solution has not yet converged err = " << err << " !< " << _eps_converge << std::endl;
       }
     }
   }
 
   if(_verbose && (_rms_res > _rms_res_old && _istep_vcycle > 1) ){
-    std::cout << "    Warning: Residual_old > Residual" << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << "    Warning: Residual_old > Residual" << std::endl;
   }
 
   // Define converged if istep exceeds maxsteps to avoid infinite loop...
   if(_istep_vcycle >= _maxsteps){
-    std::cout << "    WARNING: MultigridSolver failed to converge! Reached istep = maxsteps = " << _maxsteps << std::endl;
-    std::cout << "    res = " << _rms_res << " res_old = " << _rms_res_old << " res_i = " << _rms_res_i << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << "    WARNING: MultigridSolver failed to converge! Reached istep = maxsteps = " << _maxsteps << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << "    res = " << _rms_res << " res_old = " << _rms_res_old << " res_i = " << _rms_res_i << std::endl;
     converged  = Exit_Status::MAX_STEPS;
   }
 
@@ -476,7 +479,7 @@ void MultiGridSolver<NDIM,T>::solve_current_level(size_t level){
   size_t ngs_sweeps;
  
   if(_verbose)
-    std::cout << "    Performing Newton-Gauss-Seidel sweeps at level " << level << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << "    Performing Newton-Gauss-Seidel sweeps at level " << level << std::endl;
 
   // Number of sweeps we do
   if(level == 0)
@@ -498,8 +501,8 @@ void MultiGridSolver<NDIM,T>::solve_current_level(size_t level){
     // For debug, but this is quite useful so keep it for now
     if(_verbose){
       if( (level > 0 && (i == 1 || i == ngs_sweeps-1) ) || (level == 0) ){
-        std::cout << "        level = " << std::setw(5) << level << " NGS Sweep = " << std::setw(5) << i;
-        std::cout << " Residual = " << std::setw(10) << calculate_residual(level, _res.get_grid(level)) << std::endl;
+        BOOST_LOG_TRIVIAL(debug) << "        level = " << std::setw(5) << level << " NGS Sweep = " << std::setw(5) << i;
+        BOOST_LOG_TRIVIAL(debug) << " Residual = " << std::setw(10) << calculate_residual(level, _res.get_grid(level)) << std::endl;
       }
     }
 
@@ -508,7 +511,7 @@ void MultiGridSolver<NDIM,T>::solve_current_level(size_t level){
       _res_domain_array.push_back( calculate_residual(level, _res.get_grid(level)) );
     }
   }
-  if(_verbose) std::cout << std::endl;
+  if(_verbose) BOOST_LOG_TRIVIAL(debug) << std::endl;
 
   // Compute the residual
   double curres = calculate_residual(level, _res.get_grid(level));
@@ -538,7 +541,7 @@ void MultiGridSolver<NDIM,T>::recursive_go_up(size_t to_level){
 
   // Prolonge up solution from-level to to-level and store in _res (used as temp array)
   if(_verbose)
-    std::cout << "    Prolonge solution from level: " << to_level+1 << " -> " << to_level << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << "    Prolonge solution from level: " << to_level+1 << " -> " << to_level << std::endl;
   prolonge_up_array(to_level, _res.get_grid(from_level), _res.get_grid(to_level));
 
   // Correct solution at to_level (temp array _res contains the correction P[f-R[f]])
@@ -612,15 +615,15 @@ void MultiGridSolver<NDIM,T>::recursive_go_down(size_t from_level){
   // Check if we are at the bottom
   if(to_level >= _Nlevel) {
     if(_verbose) {
-      std::cout << "    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -" << std::endl;
-      std::cout << "    We have reached the bottom level = " << from_level << " Start going up." << std::endl;
-      std::cout << "    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" << std::endl;
+      BOOST_LOG_TRIVIAL(debug) << "    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -" << std::endl;
+      BOOST_LOG_TRIVIAL(debug) << "    We have reached the bottom level = " << from_level << " Start going up." << std::endl;
+      BOOST_LOG_TRIVIAL(debug) << "    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" << std::endl;
     }
     return;
   }
   
   if(_verbose)
-    std::cout << "    Going down from level " << from_level << " -> " << to_level << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << "    Going down from level " << from_level << " -> " << to_level << std::endl;
 
   // Restrict residual and solution
   _res.restrict_down(from_level, _res.get_grid(to_level));
